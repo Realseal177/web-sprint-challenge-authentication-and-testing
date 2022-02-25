@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 const { TOKEN_SECRET } = require('../../api/config/index')
 const { checkUsernameFree, checkNameAndPass } = require('../middleware/auth-middleware')
 
-const { add, findBy } = require('../users/users-model')
+const User = require('../users/users-model')
 
 function buildToken(user) {
   const payload = {
@@ -17,17 +17,16 @@ function buildToken(user) {
   return jwt.sign(payload, TOKEN_SECRET, options);
 }
 
-router.post('/register', checkNameAndPass, checkUsernameFree, async (req, res, next) => {
-  try {
-    const { username, password } = req.body;
-    const hash = bcrypt.hashSync(password, 8);
-    const user = { username, password: hash };
-    const createdUser = await add(user);
-    console.log(createdUser);
-    res.status(201).json(createdUser);
-  } catch (err) {
-    next(err)
-  }
+router.post('/register', checkNameAndPass, checkUsernameFree, (req, res, next) => {
+  let user = req.body;
+  const hash = bcrypt.hashSync(user.password, 8);
+  user.password = hash;
+  User.add(user)
+    .then(saved => {
+      res.status(201).json(saved)
+    })
+    .catch(next)
+
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -55,8 +54,24 @@ router.post('/register', checkNameAndPass, checkUsernameFree, async (req, res, n
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', checkNameAndPass, (req, res, next) => {
+  let { username, password } = req.body;
+
+  User.findBy(username)
+    .then(([user]) => {
+      if (user && bcrypt.compareSync(password, user.password)) {
+        const token = buildToken(user)
+        res.status(201).json({
+          message: 'welcome, Captain Marvel',
+          token: token
+        })
+      } else {
+        next({ status: 401, message: 'username and password required' })
+      }
+    })
+
+
+
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
