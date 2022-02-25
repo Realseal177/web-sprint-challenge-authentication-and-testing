@@ -3,6 +3,7 @@ const router = require('express').Router();
 
 const jwt = require('jsonwebtoken')
 const { TOKEN_SECRET } = require('../../api/config/index')
+const { checkUsernameFree, checkNameAndPass } = require('../middleware/restricted')
 
 const User = require('../users/users-model')
 
@@ -16,14 +17,14 @@ function buildToken(user) {
   return jwt.sign(payload, TOKEN_SECRET, options);
 }
 
-router.post('/register', (req, res, next) => {
+router.post('/register', checkUsernameFree, checkNameAndPass, (req, res, next) => {
   let user = req.body;
   const hash = bcrypt.hashSync(user.password, 8);
   user.password = hash;
 
   User.add(user)
-    .then(user => {
-      res.status(201).json(user)
+    .then(newUser => {
+      res.status(201).json(newUser)
     })
     .catch(next)
   /*
