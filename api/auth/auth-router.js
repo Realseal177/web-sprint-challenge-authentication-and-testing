@@ -66,7 +66,7 @@ router.post('/login', checkNameAndPass, (req, res, next) => {
           token: token
         })
       } else {
-        next({ status: 401, message: 'username and password required' })
+        next({ status: 401, message: 'invalid credentials' })
       }
     })
 
