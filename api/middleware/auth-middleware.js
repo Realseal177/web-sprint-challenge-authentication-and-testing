@@ -21,5 +21,4 @@ async function checkUsernameFree(req, res, next) {
     } 
   }
   
-
   module.exports = { checkNameAndPass, checkUsernameFree }
