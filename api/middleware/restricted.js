@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { TOKEN_SECRET } = require('../../api/config/index');
-
-const User = require('../users/users-model')
+const { TOKEN_SECRET } = require('../config');
 
 const restricted = (req, res, next) => {
   const token = req.headers.authorization;
@@ -19,35 +17,8 @@ const restricted = (req, res, next) => {
   }
 }
 
-async function checkUsernameFree(req, res, next) {
-  try {
-    const users = await User.findBy({ username: req.body.username });
-    if (!users.length) {
-      next()
-    } else {
-      next({ status: 422, message: 'username taken' })
-    }
-  } catch (err) {
-    next(err)
-  } 
-}
-
-function checkNameAndPass(req, res, next) {
-  if (!req.body.password || !req.body.username) {
-    next({ status: 422, message: 'username and password required' })
-  } else {
-    next()
-  }
-}
-
-
-
-
-
 module.exports = {
   restricted,
-  checkUsernameFree,
-  checkNameAndPass
   /*
     IMPLEMENT
 
