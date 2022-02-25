@@ -1,7 +1,31 @@
+const bcrypt = require('bcryptjs')
 const router = require('express').Router();
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+const jwt = require('jsonwebtoken')
+const { TOKEN_SECRET } = require('../../api/config/index')
+
+const User = require('../users/users-model')
+
+function buildToken(user) {
+  const payload = {
+    username: user.username
+  }
+  const options = {
+    expiresIn: '1d'
+  }
+  return jwt.sign(payload, TOKEN_SECRET, options);
+}
+
+router.post('/register', (req, res, next) => {
+  let user = req.body;
+  const hash = bcrypt.hashSync(user.password, 8);
+  user.password = hash;
+
+  User.add(user)
+    .then(user => {
+      res.status(201).json(user)
+    })
+    .catch(next)
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
